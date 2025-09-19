@@ -1,0 +1,156 @@
+/* Paleta de cores */
+:root {
+    --bege-claro: #f5f0e6;
+    --bege-medio: #e0d6c3;
+    --marrom-claro: #a1866f;
+    --marrom-medio: #6b4f3f;
+    --marrom-escuro: #3e2a1e;
+}
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bege-claro);
+    color: var(--marrom-escuro);
+    padding: 20px;
+}
+
+/* Cabeçalho */
+header {
+    background-color: var(--marrom-medio);
+    padding: 20px;
+    text-align: center;
+    color: var(--bege-claro);
+}
+
+header h1 {
+    font-size: 2em;
+}
+
+nav {
+    margin-top: 10px;
+}
+
+nav a {
+    color: var(--bege-claro);
+    text-decoration: none;
+    margin: 0 10px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Conteúdo principal */
+main {
+    background-color: var(--bege-medio);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+/* Títulos */
+main h2 {
+    margin-bottom: 20px;
+    color: var(--marrom-escuro);
+}
+
+/* Formulários */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"] {
+    padding: 10px;
+    border: 1px solid var(--marrom-claro);
+    border-radius: 4px;
+    background-color: #fffaf5;
+    color: var(--marrom-escuro);
+}
+
+button {
+    padding: 10px;
+    background-color: var(--marrom-medio);
+    color: var(--bege-claro);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: var(--marrom-escuro);
+}
+
+/* Links em formulários */
+a {
+    color: var(--marrom-medio);
+    text-decoration: none;
+    margin-top: 5px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Tabelas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fffaf5;
+    margin-top: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid var(--bege-claro);
+    text-align: left;
+}
+
+th {
+    background-color: var(--marrom-claro);
+    color: var(--bege-claro);
+}
+
+tr:nth-child(even) {
+    background-color: var(--bege-claro);
+}
+
+/* Mensagens de feedback */
+.flash-messages {
+    margin-top: 20px;
+}
+
+.flash {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.flash.success {
+    background-color: #d4c2aa;
+    color: var(--marrom-escuro);
+}
+
+.flash.error {
+    background-color: #b38b6d;
+    color: #fff;
+}
