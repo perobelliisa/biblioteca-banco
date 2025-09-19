@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 
 host = 'localhost'
-database = r'C:\Users\Aluno\Desktop\isadora\LIVRO.FDB'
+database = r'C:\Users\Aluno\Desktop\isadora\SenhaHash\LIVRO.FDB'
 user = 'SYSDBA'
 password = 'sysdba'
 con = fdb.connect(host=host, database=database, user=user, password=password)
@@ -186,4 +186,5 @@ def deletar_usuario(id):
 
 
 if __name__ == '__main__':
+
     app.run(debug=True)
