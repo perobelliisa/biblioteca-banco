@@ -1,4 +1,4 @@
-from flask import Flask, render_template , request, flash, redirect, url_for
+from flask import Flask, render_template , request, flash, redirect, url_for, session,  send_from_directory
 import fdb
 from flask_bcrypt import generate_password_hash, check_password_hash
 
@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 
 host = 'localhost'
-database = r'C:\Users\Aluno\Desktop\isadora\SenhaHash\LIVRO.FDB'
+database = r'C:\Users\Aluno\Desktop\isadora\biblioteca-banco\LIVRO.FDB'
 user = 'SYSDBA'
 password = 'sysdba'
 con = fdb.connect(host=host, database=database, user=user, password=password)
@@ -22,6 +22,9 @@ def index():
 
 @app.route('/novo')
 def novo():
+    if "id_usuario" not in session:
+        flash("Você precisa estar logado para acessar essa página", "error")
+        return redirect(url_for('login'))
     return render_template('novo.html', titulo='Novo Livro')
 
 @app.route('/criar', methods=['POST'])
@@ -38,7 +41,10 @@ def criar():
             return redirect(url_for('novo'))
         cursor.execute("insert into livro(titulo, autor, ano_publicacao) values(?, ?, ?)",
                        (titulo, autor, ano_publicacao))
+        id_livro = cursor.fetchone()[0]
         con.commit()
+        arquivo = request.files['arquivo']
+        arquivo.save(f'uploads/capa{id_livro}.jpg')
     finally:
         cursor.close()
     flash('O livro foi cadastrado com sucesso!')
@@ -50,6 +56,9 @@ def atualizar():
 
 @app.route('/editar/<int:id>', methods=['GET', 'POST'])
 def editar(id):
+    if "id_usuario" not in session:
+        flash("Você precisa estar logado para acessar essa página", "error")
+        return redirect(url_for('login'))
     cursor = con.cursor()
     cursor.execute("SELECT id_livro, titulo, autor, ano_publicacao FROM livro WHERE id_livro = ?", (id,))
     livro = cursor.fetchone()
@@ -75,6 +84,9 @@ def editar(id):
 def deletar(id):
     cursor = con.cursor()
     try:
+        if "id_usuario" not in session:
+            flash("Você precisa estar logado para acessar essa página", "error")
+            return redirect(url_for('login'))
         cursor.execute('DELETE FROM livro WHERE id_livro = ?', (id,))
         con.commit()
         flash('Livro excluído com sucesso!', 'success')
@@ -88,6 +100,9 @@ def deletar(id):
 
 @app.route('/lista_usuario')
 def lista_usuario():
+    if "id_usuario" not in session:
+        flash("Você precisa estar logado para acessar essa página", "error")
+        return redirect(url_for('login'))
     cursor = con.cursor()
     cursor.execute("select id_usuario, nome, email, senha from usuario")
     usuarios = cursor.fetchall()
@@ -130,14 +145,16 @@ def login():
         email = request.form['email']
         senha = request.form['senha']
         cursor = con.cursor()
-        cursor.execute('SELECT u.SENHA FROM USUARIO u WHERE u.EMAIL  =  ?', (email,))
+        cursor.execute('SELECT u.id_usuario, u.SENHA FROM USUARIO u WHERE u.EMAIL  =  ?', (email,))
         login = cursor.fetchone()
+        senha_cripto = login[1]
         if not login:
             flash('Email não encontrado')
             cursor.close()
-        if check_password_hash(login[0], senha):
+        if check_password_hash(senha_cripto, senha):
             flash('Login com sucesso')
             cursor.close()
+            session["id_usuario"] = login[0]
             return redirect(url_for('lista_usuario'))
         return render_template('login.html')
     return render_template('login.html')
@@ -145,6 +162,9 @@ def login():
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
+    if "id_usuario" not in session:
+        flash("Você precisa estar logado para acessar essa página", "error")
+        return redirect(url_for('login'))
     cursor = con.cursor()
     cursor.execute("SELECT id_usuario, nome, email, senha FROM usuario WHERE id_usuario = ?", (id,))
     usuario = cursor.fetchone()
@@ -173,6 +193,9 @@ def editar_usuario(id):
 def deletar_usuario(id):
     cursor = con.cursor()
     try:
+        if "id_usuario" not in session:
+            flash("Você precisa estar logado para acessar essa página", "error")
+            return redirect(url_for('login'))
         cursor.execute('DELETE FROM usuario WHERE id_usuario = ?', (id,))
         con.commit()
         flash('Usuário excluído com sucesso!', 'success')
@@ -184,6 +207,14 @@ def deletar_usuario(id):
     return redirect(url_for('lista_usuario'))
 
 
+@app.route("/logout")
+def logout():
+    session.pop("id_usuario", None)
+    return redirect(url_for("index"))
+
+@app.route('/uploads/<nome_arquivo>')
+def imagem(nome_arquivo):
+    return send_from_directory('uploads', nome_arquivo)
 
 if __name__ == '__main__':
 
