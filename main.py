@@ -1,12 +1,14 @@
 from flask import Flask, render_template , request, flash, redirect, url_for, session,  send_from_directory
 import fdb
 from flask_bcrypt import generate_password_hash, check_password_hash
+from fpdf import FPDF
+from flask import send_file
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 
 host = 'localhost'
-database = r'C:\Users\Aluno\Desktop\isadora\biblioteca-banco\LIVRO.FDB'
+database = r'C:\Users\Aluno\Desktop\Isadora\biblioteca-banco\LIVRO.FDB'
 user = 'SYSDBA'
 password = 'sysdba'
 con = fdb.connect(host=host, database=database, user=user, password=password)
@@ -39,7 +41,7 @@ def criar():
         if cursor.fetchone():
             flash('Esse livro já está cadastrado')
             return redirect(url_for('novo'))
-        cursor.execute("insert into livro(titulo, autor, ano_publicacao) values(?, ?, ?)",
+        cursor.execute("insert into livro(titulo, autor, ano_publicacao) values(?, ?, ?) returning id_livro"  ,
                        (titulo, autor, ano_publicacao))
         id_livro = cursor.fetchone()[0]
         con.commit()
@@ -160,6 +162,10 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/logout')
+def logout():
+    session.pop('id_usuario', None)
+    return redirect(url_for('index'))
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
     if "id_usuario" not in session:
@@ -184,7 +190,7 @@ def editar_usuario(id):
                        (nome, email, senha_cripto, id))
         con.commit()
         flash("Usuário atualizado com sucesso")
-        return redirect(url_for('index'))
+        return redirect(url_for('usuarios'))
     cursor.close()
     return render_template('editar_usuario.html', usuario=usuario, titulo='Editar usuario')
 
@@ -207,14 +213,36 @@ def deletar_usuario(id):
     return redirect(url_for('lista_usuario'))
 
 
-@app.route("/logout")
-def logout():
-    session.pop("id_usuario", None)
-    return redirect(url_for("index"))
-
 @app.route('/uploads/<nome_arquivo>')
 def imagem(nome_arquivo):
     return send_from_directory('uploads', nome_arquivo)
+
+
+@app.route('/relatorio', methods=['GET'])
+def relatorio():
+    cursor = con.cursor()
+    cursor.execute("SELECT id_livro, titulo, autor, ano_publicacao FROM livro")
+    livros = cursor.fetchall()
+    cursor.close()
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", style='B', size=16)
+    pdf.cell(200, 10, "Relatorio de Livros", ln=True, align='C')
+    pdf.ln(5)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(5)
+    pdf.set_font("Arial", size=12)
+    for livro in livros:
+        pdf.cell(200, 10, f"ID: {livro[0]} - {livro[1]} - {livro[2]} - {livro[3]}", ln=True)
+    contador_livros = len(livros)
+    pdf.ln(10)  # Espaço antes do contador
+    pdf.set_font("Arial", style='B', size=12)
+    pdf.cell(200, 10, f"Total de livros cadastrados: {contador_livros}", ln=True, align='C')
+    pdf_path = "relatorio_livros.pdf"
+    pdf.output(pdf_path)
+    return send_file(pdf_path, as_attachment=True, mimetype='application/pdf')
+
 
 if __name__ == '__main__':
 
